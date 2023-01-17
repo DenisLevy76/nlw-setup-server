@@ -10,6 +10,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+generator erd {
+  provider = "prisma-erd-generator"
+}
+
 model Habit {
   id String @id @default(uuid())
 
@@ -25,7 +29,7 @@ model HabitWeekDay {
   id String @id @default(uuid())
 
   habitId String
-  weekDay String
+  weekDay Int
 
   habit Habit @relation(fields: [habitId], references: [id])
 
@@ -36,8 +40,8 @@ model HabitWeekDay {
 model Day {
   id String @id @default(uuid())
 
-  date     DateTime
-  dayHabit DayHabit[]
+  date      DateTime
+  dayHabits DayHabit[]
 
   @@unique([date])
   @@map("days")
@@ -53,5 +57,5 @@ model DayHabit {
   habit Habit @relation(fields: [habitId], references: [id])
 
   @@unique([dayId, habitId])
-  @@map("days_habits")
+  @@map("day_habits")
 }
