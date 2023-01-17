@@ -4,6 +4,7 @@ import cors from '@fastify/cors'
 
 const SERVER_PORT = 3333
 const server = Fastify()
+
 server.register(cors, { origin: ['http://localhost:3000'] })
 
 const prisma = new PrismaClient()
