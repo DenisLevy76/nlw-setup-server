@@ -1,6 +1,6 @@
 import dayjs from 'dayjs'
 import { FastifyInstance } from 'fastify'
-import { z } from 'zod'
+import { date, z } from 'zod'
 import { prisma } from './lib/prisma'
 
 export const routes = async (server: FastifyInstance) => {
@@ -66,5 +66,60 @@ export const routes = async (server: FastifyInstance) => {
       possibleHabits,
       completedHabits
     }
+  })
+
+  server.patch('/habits/:habitId/toggle', async (request, response) => {
+    const toggleHabitParams = z.object({
+      habitId: z.string().uuid()
+    })
+
+    try {
+      const { habitId } = toggleHabitParams.parse(request.params)
+      const today = dayjs().startOf('day').toDate()
+      let day = await prisma.day.findUnique({
+        where: {
+          date: today
+        }
+      })
+
+      if (!day) {
+        day = await prisma.day.create({
+          data: {
+            date: today
+          }
+        })
+      }
+
+      // verificando se o hábito já havia sido completado
+      const dayHabit = await prisma.dayHabit.findUnique({
+        where: {
+          dayId_habitId: {
+            dayId: day.id,
+            habitId
+          }
+        }
+      })
+
+      if (dayHabit) {
+        await prisma.dayHabit.delete({
+          where: {
+            id: dayHabit.id
+          }
+        })
+      } else {
+        // completar habito
+        await prisma.dayHabit.create({
+          data: {
+            dayId: day.id,
+            habitId,
+          }
+        })
+      }
+
+    } catch (error) {
+      console.error(error)
+    }
+
+
   })
 }
